@@ -6,6 +6,52 @@ import Board from './components/Board'
 import GamePanel from './components/GamePanel'
 import ActionModal from './components/ActionModal'
 import MultiplayerSetup from './components/MultiplayerSetup'
+import OrderRollScreen from './components/OrderRollScreen'
+import { loadSession } from './utils/playerId'
+
+// ─── Top banner — shows the latest log line whenever dice are rolled ────────
+
+function TopBanner() {
+  const { state } = useGame()
+  const { dice, diceRolled, log, phase } = state
+  const [visible, setVisible] = useState(false)
+  const prevDiceRef = useRef(null)
+  const timerRef    = useRef(null)
+
+  useEffect(() => {
+    if (!diceRolled) {
+      prevDiceRef.current = null
+      return
+    }
+    const prev = prevDiceRef.current
+    if (prev === null || prev[0] !== dice[0] || prev[1] !== dice[1]) {
+      prevDiceRef.current = dice
+      setVisible(true)
+      clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => setVisible(false), 3500)
+    }
+  }, [dice, diceRolled])
+
+  if (phase !== 'playing' || !visible || !log[0]) return null
+
+  return (
+    <div className="top-banner">
+      🎲 {log[0]}
+    </div>
+  )
+}
+
+// ─── Connection status banner (online mode) ─────────────────────────────────
+
+function ConnectionBanner() {
+  const { isOnline, connectionStatus } = useGame()
+  if (!isOnline || connectionStatus === 'connected') return null
+  return (
+    <div className="connection-banner">
+      📡 Mất kết nối — đang kết nối lại...
+    </div>
+  )
+}
 
 // ─── Game view (board + panel + modal) ───────────────────────────────────────
 
@@ -35,11 +81,23 @@ function GameApp() {
   // In solo mode: setup screen before game starts
   if (phase === 'setup') return <SetupScreen />
 
+  // Roll-for-order phase before the actual game begins
+  if (phase === 'order_roll') {
+    return (
+      <>
+        <ConnectionBanner />
+        <OrderRollScreen />
+      </>
+    )
+  }
+
   // In online mode: modal only shows for the active player
   const isMyTurn = !isOnline || myPlayerIndex === currentPlayerIndex
 
   return (
     <div className="game-layout">
+      <ConnectionBanner />
+      <TopBanner />
       <div className="board-area">
         <Board />
       </div>
@@ -111,12 +169,22 @@ function HomeScreen({ onSolo, onOnline }) {
 
 export default function App() {
   // mode: 'home' | 'solo' | 'online_setup' | 'online_game'
-  const [mode, setMode] = useState('home')
+  const [mode, setMode] = useState(() => {
+    // Tự động vào lại phòng nếu đã có phiên trước đó, hoặc nếu mở từ link mã QR
+    const hasJoinLink = new URLSearchParams(window.location.search).has('join')
+    const hasSession  = !!loadSession()
+    return (hasJoinLink || hasSession) ? 'online_setup' : 'home'
+  })
   const [onlineData, setOnlineData] = useState(null)
 
-  function handleOnlineGameStart({ socket, myPlayerIndex, initialGameState }) {
-    setOnlineData({ socket, myPlayerIndex, initialGameState })
+  function handleOnlineGameStart({ socket, myPlayerIndex, initialGameState, code, playerId }) {
+    setOnlineData({ socket, myPlayerIndex, initialGameState, code, playerId })
     setMode('online_game')
+  }
+
+  function handleExitToHome() {
+    setOnlineData(null)
+    setMode('home')
   }
 
   if (mode === 'home') {
@@ -151,6 +219,9 @@ export default function App() {
         socket={onlineData.socket}
         myPlayerIndex={onlineData.myPlayerIndex}
         initialGameState={onlineData.initialGameState}
+        code={onlineData.code}
+        playerId={onlineData.playerId}
+        onExit={handleExitToHome}
       >
         <GameApp />
       </OnlineProvider>

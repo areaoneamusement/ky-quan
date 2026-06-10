@@ -98,6 +98,9 @@ export const initialState = {
   phase: 'setup',
   players: [],
   currentPlayerIndex: 0,
+  turnOrder: [],
+  roundCount: 0,
+  maxRounds: 0,
   dice: [1, 1],
   diceRolled: false,
   doublesCount: 0,
@@ -109,6 +112,8 @@ export const initialState = {
   chanceIndex: 0,
   chestIndex: 0,
   winner: null,
+  orderRolls: [],
+  orderRollQueue: [],
 }
 
 // ─── reducer ────────────────────────────────────────────────────────────────
@@ -125,16 +130,53 @@ export function reducer(state, action) {
       }))
       return {
         ...initialState,
-        phase: 'playing',
+        phase: 'order_roll',
         players,
+        maxRounds: Math.max(0, Math.min(50, Number(action.maxRounds) || 0)),
         chanceDeck: L.shuffleArray(CHANCE_CARDS),
         chestDeck:  L.shuffleArray(CHEST_CARDS),
-        log: [`🌍 Bắt đầu! Lượt của ${players[0].name}`],
+        orderRollQueue: players.map(p => p.id),
+        orderRolls: [],
+        log: [`🎲 Tung xúc xắc để xác định thứ tự chơi!`],
+      }
+    }
+
+    // ── roll to determine turn order ────────────────────────────────────────
+    case 'ROLL_ORDER': {
+      if (state.phase !== 'order_roll' || state.orderRollQueue.length === 0) return state
+      const playerId = state.orderRollQueue[0]
+      const player   = getPlayer(state, playerId)
+      const d1 = L.rollDie(), d2 = L.rollDie()
+      const sum = d1 + d2
+      let s = addLog(state, `${player.emoji} ${player.name} tung ${d1}+${d2}=${sum} để xác định thứ tự`)
+      const orderRolls = [...s.orderRolls, { id: playerId, value: sum }]
+      const queue = s.orderRollQueue.slice(1)
+      s = { ...s, orderRolls, orderRollQueue: queue, dice: [d1, d2], diceRolled: true }
+
+      if (queue.length > 0) return s
+
+      const maxVal = Math.max(...orderRolls.map(r => r.value))
+      const tied = orderRolls.filter(r => r.value === maxVal).map(r => r.id)
+      if (tied.length > 1) {
+        s = addLog(s, `🎲 Hòa nhau ở ${maxVal} điểm — ${tied.length} người tung lại!`)
+        return { ...s, orderRollQueue: tied, orderRolls: [] }
+      }
+
+      const winnerId = tied[0]
+      const ids = s.players.map(p => p.id)
+      const winnerIdx = ids.indexOf(winnerId)
+      const turnOrder = [...ids.slice(winnerIdx), ...ids.slice(0, winnerIdx)]
+      const winner = getPlayer(s, winnerId)
+      s = addLog(s, `🏁 ${winner.emoji} ${winner.name} đi trước! Bắt đầu trò chơi!`)
+      return {
+        ...s, phase: 'playing', turnOrder, currentPlayerIndex: winnerId,
+        orderRollQueue: [], orderRolls: [], diceRolled: false, dice: [1, 1],
       }
     }
 
     // ── roll dice ──────────────────────────────────────────────────────────
     case 'ROLL_DICE': {
+      if (state.phase !== 'playing') return state
       const player = state.players[state.currentPlayerIndex]
       const canReroll = state.diceRolled && L.isDoubles(state.dice) && state.doublesCount > 0 && !state.pendingAction && !player.inJail
       if (!canReroll && (state.diceRolled || state.pendingAction)) return state
@@ -362,18 +404,36 @@ export function reducer(state, action) {
 
     // ── end turn ───────────────────────────────────────────────────────────
     case 'END_TURN': {
-      if (state.pendingAction) return state
+      if (state.phase !== 'playing' || state.pendingAction) return state
       const alive = state.players.filter(p => !p.bankrupt)
       if (alive.length === 1) {
         return addLog({ ...state, phase: 'ended', winner: alive[0].id }, `🏆 ${alive[0].name} chiến thắng!`)
       }
 
-      let nextIdx = (state.currentPlayerIndex + 1) % state.players.length
-      while (state.players[nextIdx].bankrupt) nextIdx = (nextIdx + 1) % state.players.length
+      const order = state.turnOrder.length ? state.turnOrder : state.players.map(p => p.id)
+      const curPos = order.indexOf(state.currentPlayerIndex)
+      let nextPos = (curPos + 1) % order.length
+      while (state.players[order[nextPos]].bankrupt) nextPos = (nextPos + 1) % order.length
+      const nextId = order[nextPos]
 
-      const next = state.players[nextIdx]
-      let s = { ...state, currentPlayerIndex: nextIdx, diceRolled: false, doublesCount: 0, dice: [1, 1] }
-      return addLog(s, `--- Lượt của ${next.name} ---`)
+      const wrapped = nextPos <= curPos
+      const roundCount = wrapped ? state.roundCount + 1 : state.roundCount
+
+      const next = state.players[nextId]
+      let s = { ...state, currentPlayerIndex: nextId, diceRolled: false, doublesCount: 0, dice: [1, 1], roundCount }
+      s = addLog(s, `--- Lượt của ${next.name} (Vòng ${roundCount + 1}) ---`)
+
+      if (state.maxRounds > 0 && roundCount >= state.maxRounds) {
+        const ranked = s.players
+          .filter(p => !p.bankrupt)
+          .map(p => ({ ...p, netWorth: L.calculateNetWorth(p, s.ownership) }))
+          .sort((a, b) => b.netWorth - a.netWorth)
+        const champion = ranked[0]
+        return addLog({ ...s, phase: 'ended', winner: champion.id },
+          `🏆 Hết ${state.maxRounds} vòng! ${champion.emoji} ${champion.name} chiến thắng với $${champion.netWorth.toLocaleString()}!`)
+      }
+
+      return s
     }
 
     default:

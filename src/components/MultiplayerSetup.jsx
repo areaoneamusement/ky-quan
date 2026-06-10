@@ -1,28 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react'
+import QRCode from 'qrcode'
 import { socket } from '../socket'
 import { PLAYER_PRESETS } from '../game/gameLogic'
+import { getPlayerId, saveSession, loadSession, clearSession } from '../utils/playerId'
 
 // ─── Sub-screens ─────────────────────────────────────────────────────────────
 
-function SetupForm({ onBack, onEnterLobby }) {
+function ConnectingScreen({ message }) {
+  return (
+    <div style={cardStyle}>
+      <div style={{ textAlign: 'center', padding: '32px 0' }}>
+        <div style={{ fontSize: '44px', marginBottom: '12px' }}>🌐</div>
+        <p style={{ color: '#8b949e', fontSize: '13px' }}>{message}</p>
+      </div>
+    </div>
+  )
+}
+
+function SetupForm({ onBack, onEnterLobby, initialJoinCode, connError }) {
   const [name, setName]         = useState('')
   const [presetIdx, setPreset]  = useState(0)
-  const [joinCode, setJoinCode] = useState('')
+  const [joinCode, setJoinCode] = useState(initialJoinCode || '')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
 
   const preset = PLAYER_PRESETS[presetIdx]
+  const playerId = getPlayerId()
 
   useEffect(() => {
-    socket.connect()
-
     function onRoomCreated({ code, playerIndex, lobbyPlayers }) {
       setLoading(false)
+      saveSession({ code, playerId })
       onEnterLobby({ code, playerIndex, lobbyPlayers, isHost: true })
     }
     function onRoomJoined({ code, playerIndex, lobbyPlayers }) {
       setLoading(false)
-      onEnterLobby({ code, playerIndex, lobbyPlayers, isHost: false })
+      saveSession({ code, playerId })
+      onEnterLobby({ code, playerIndex, lobbyPlayers, isHost: playerIndex === 0 })
     }
     function onError({ message }) {
       setLoading(false)
@@ -38,32 +52,44 @@ function SetupForm({ onBack, onEnterLobby }) {
       socket.off('room_joined', onRoomJoined)
       socket.off('error', onError)
     }
-  }, [onEnterLobby])
+  }, [onEnterLobby, playerId])
 
   function handleBack() {
     socket.disconnect()
     onBack()
   }
 
+  function validateName() {
+    if (!name.trim()) {
+      setError('Vui lòng nhập tên của bạn!')
+      return false
+    }
+    return true
+  }
+
   function createRoom() {
     setError('')
+    if (!validateName()) return
     setLoading(true)
     socket.emit('create_room', {
-      name: name.trim() || 'Ẩn Danh',
+      name: name.trim(),
       color: preset.color,
       emoji: preset.emoji,
+      playerId,
     })
   }
 
   function joinRoom() {
+    if (!validateName()) return
     if (joinCode.trim().length < 4) { setError('Nhập đủ 4 ký tự mã phòng!'); return }
     setError('')
     setLoading(true)
     socket.emit('join_room', {
       code: joinCode.trim().toUpperCase(),
-      name: name.trim() || 'Ẩn Danh',
+      name: name.trim(),
       color: preset.color,
       emoji: preset.emoji,
+      playerId,
     })
   }
 
@@ -78,12 +104,18 @@ function SetupForm({ onBack, onEnterLobby }) {
         <p style={{ fontSize: '12px', color: '#8b949e' }}>Chơi với bạn bè qua Internet</p>
       </div>
 
+      {connError && (
+        <div style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: '8px', padding: '8px 12px', marginBottom: '14px', fontSize: '12px', color: '#ffd700' }}>
+          ⏳ {connError}
+        </div>
+      )}
+
       {/* Name input */}
-      <label style={labelStyle}>Tên của bạn</label>
+      <label style={labelStyle}>Tên của bạn <span style={{ color: '#ff7b72' }}>*</span></label>
       <input
         value={name}
         onChange={e => setName(e.target.value)}
-        placeholder="Nhập tên..."
+        placeholder="Nhập tên của bạn (bắt buộc)..."
         maxLength={20}
         style={inputStyle}
         onFocus={e => e.target.style.borderColor = '#3fb950'}
@@ -159,6 +191,11 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
   const [players, setPlayers] = useState(lobbyData.lobbyPlayers)
   const [copied, setCopied]   = useState(false)
   const [error, setError]     = useState('')
+  const [maxRounds, setMaxRounds] = useState(0)
+  const [qrSrc, setQrSrc]     = useState('')
+  const [showQr, setShowQr]   = useState(false)
+
+  const joinUrl = `${window.location.origin}${window.location.pathname}?join=${code}`
 
   useEffect(() => {
     function onLobbyUpdated({ lobbyPlayers }) {
@@ -182,6 +219,12 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
     }
   }, [onGameStart, playerIndex])
 
+  useEffect(() => {
+    QRCode.toDataURL(joinUrl, { width: 220, margin: 1, color: { dark: '#0d1117', light: '#e6edf3' } })
+      .then(setQrSrc)
+      .catch(() => setQrSrc(''))
+  }, [joinUrl])
+
   function copyCode() {
     navigator.clipboard.writeText(code).catch(() => {})
     setCopied(true)
@@ -190,12 +233,13 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
 
   function startGame() {
     setError('')
-    socket.emit('start_game')
+    socket.emit('start_game', { maxRounds })
   }
 
   function leaveRoom() {
     socket.emit('leave_room')
     socket.disconnect()
+    clearSession()
     onBack()
   }
 
@@ -229,7 +273,25 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
           }}>
             {copied ? '✓ Đã sao chép' : '📋 Sao chép'}
           </button>
+          <button onClick={() => setShowQr(s => !s)} style={{
+            background: showQr ? 'rgba(65,105,225,0.18)' : 'rgba(255,255,255,0.06)',
+            border: '1px solid ' + (showQr ? '#4169e1' : '#30363d'),
+            borderRadius: '8px', padding: '8px 12px',
+            color: showQr ? '#79b8ff' : '#8b949e',
+            fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
+          }}>
+            📱 QR
+          </button>
         </div>
+
+        {showQr && (
+          <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+            {qrSrc
+              ? <img src={qrSrc} alt="Mã QR vào phòng" style={{ width: '160px', height: '160px', borderRadius: '10px', border: '1px solid #30363d' }} />
+              : <div style={{ fontSize: '12px', color: '#484f58' }}>Đang tạo mã QR...</div>}
+            <div style={{ fontSize: '11px', color: '#8b949e' }}>Quét để vào phòng nhanh</div>
+          </div>
+        )}
       </div>
 
       {/* Player list */}
@@ -238,7 +300,7 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
           Người chơi ({players.length}/4)
         </div>
         {players.map((p, i) => (
-          <div key={p.socketId} style={{
+          <div key={p.playerId} style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             padding: '8px 10px', borderRadius: '8px', marginBottom: '6px',
             background: i === playerIndex ? 'rgba(63,185,80,0.08)' : 'rgba(255,255,255,0.03)',
@@ -269,6 +331,28 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
           </div>
         )}
       </div>
+
+      {/* Round limit (host only) */}
+      {isHost && (
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '11px', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+            Số vòng chơi
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {[0, 10, 15, 20].map(n => (
+              <button key={n} onClick={() => setMaxRounds(n)} style={{
+                flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid',
+                borderColor: maxRounds === n ? '#3fb950' : '#30363d',
+                background: maxRounds === n ? 'rgba(63,185,80,0.15)' : '#0d1117',
+                color: maxRounds === n ? '#3fb950' : '#8b949e',
+                fontWeight: 700, fontSize: '12px', cursor: 'pointer', transition: 'all 0.15s',
+              }}>
+                {n === 0 ? 'Không giới hạn' : `${n} vòng`}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && (
         <div style={{ background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.3)', borderRadius: '8px', padding: '8px 12px', marginBottom: '14px', fontSize: '12px', color: '#ff7b72' }}>
@@ -303,8 +387,63 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function MultiplayerSetup({ onBack, onGameStart }) {
-  const [screen, setScreen] = useState('setup') // 'setup' | 'lobby'
+  // 'connecting' | 'setup' | 'lobby'
+  const [screen, setScreen] = useState('connecting')
   const [lobbyData, setLobbyData] = useState(null)
+  const [connError, setConnError] = useState('')
+  const initialJoinCode = useRef(new URLSearchParams(window.location.search).get('join') || '').current
+
+  useEffect(() => {
+    const playerId = getPlayerId()
+    const session = loadSession()
+
+    function attemptRejoin() {
+      if (session?.code && session?.playerId === playerId) {
+        socket.emit('rejoin_room', { playerId })
+      } else {
+        setScreen('setup')
+      }
+    }
+
+    function onConnect() {
+      setConnError('')
+      attemptRejoin()
+    }
+    function onConnectError() {
+      setConnError('Không thể kết nối đến máy chủ. Đang thử kết nối lại...')
+    }
+    function onRejoined({ code, playerIndex, gameState }) {
+      saveSession({ code, playerId })
+      onGameStart({ socket, myPlayerIndex: playerIndex, initialGameState: gameState, code, playerId })
+    }
+    function onRejoinedLobby({ code, playerIndex, lobbyPlayers }) {
+      saveSession({ code, playerId })
+      setLobbyData({ code, playerIndex, lobbyPlayers, isHost: playerIndex === 0 })
+      setScreen('lobby')
+    }
+    function onRejoinFailed() {
+      clearSession()
+      setScreen('setup')
+    }
+
+    socket.on('connect', onConnect)
+    socket.on('connect_error', onConnectError)
+    socket.on('rejoined', onRejoined)
+    socket.on('rejoined_lobby', onRejoinedLobby)
+    socket.on('rejoin_failed', onRejoinFailed)
+
+    socket.connect()
+    if (socket.connected) onConnect()
+
+    return () => {
+      socket.off('connect', onConnect)
+      socket.off('connect_error', onConnectError)
+      socket.off('rejoined', onRejoined)
+      socket.off('rejoined_lobby', onRejoinedLobby)
+      socket.off('rejoin_failed', onRejoinFailed)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function handleEnterLobby(data) {
     setLobbyData(data)
@@ -312,12 +451,21 @@ export default function MultiplayerSetup({ onBack, onGameStart }) {
   }
 
   function handleGameStart({ gameState, playerIndex }) {
-    onGameStart({ socket, myPlayerIndex: playerIndex, initialGameState: gameState })
+    const playerId = getPlayerId()
+    onGameStart({ socket, myPlayerIndex: playerIndex, initialGameState: gameState, code: lobbyData.code, playerId })
   }
 
   function handleBackFromLobby() {
     setLobbyData(null)
     setScreen('setup')
+  }
+
+  if (screen === 'connecting') {
+    return (
+      <div style={wrapStyle}>
+        <ConnectingScreen message={connError || 'Đang kết nối...'} />
+      </div>
+    )
   }
 
   if (screen === 'lobby' && lobbyData) {
@@ -334,7 +482,7 @@ export default function MultiplayerSetup({ onBack, onGameStart }) {
 
   return (
     <div style={wrapStyle}>
-      <SetupForm onBack={onBack} onEnterLobby={handleEnterLobby} />
+      <SetupForm onBack={onBack} onEnterLobby={handleEnterLobby} initialJoinCode={initialJoinCode} connError={connError} />
     </div>
   )
 }

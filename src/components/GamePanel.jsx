@@ -1,11 +1,11 @@
 import React from 'react'
 import { useGame } from '../context/GameContext'
 import { BOARD_SPACES } from '../data/boardData'
-import { isDoubles } from '../game/gameLogic'
+import { isDoubles, calculateNetWorth } from '../game/gameLogic'
 
 export default function GamePanel() {
-  const { state, dispatch, isOnline, myPlayerIndex } = useGame()
-  const { players, currentPlayerIndex, dice, diceRolled, doublesCount, pendingAction, log, phase, winner } = state
+  const { state, dispatch, isOnline, myPlayerIndex, logout, disconnectedPlayers, code } = useGame()
+  const { players, currentPlayerIndex, ownership, dice, diceRolled, doublesCount, pendingAction, log, phase, winner } = state
   const player = players[currentPlayerIndex]
 
   // In online mode, only the active player can act
@@ -33,6 +33,22 @@ export default function GamePanel() {
 
   return (
     <div className="game-panel">
+      {/* Online room bar + logout */}
+      {isOnline && (
+        <div className="panel-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px' }}>
+          <div style={{ fontSize: '11px', color: '#8b949e' }}>
+            🌐 Phòng <span style={{ color: '#ffd700', fontWeight: 800, letterSpacing: '0.1em' }}>{code}</span>
+          </div>
+          <button onClick={logout} style={{
+            background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.3)',
+            borderRadius: '6px', padding: '4px 10px', color: '#ff7b72',
+            fontSize: '11px', fontWeight: 700, cursor: 'pointer',
+          }}>
+            🚪 Đăng xuất
+          </button>
+        </div>
+      )}
+
       {/* Current player */}
       <div className="panel-section">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
@@ -105,9 +121,16 @@ export default function GamePanel() {
         </div>
         {players.map(p => (
           <PlayerRow key={p.id} player={p} isActive={p.id === player.id}
-            isMe={isOnline && p.id === myPlayerIndex} />
+            isMe={isOnline && p.id === myPlayerIndex}
+            isDisconnected={isOnline && disconnectedPlayers?.has(p.id)} />
         ))}
       </div>
+
+      {/* Tổng tài sản & xếp hạng realtime */}
+      <NetWorthRanking players={players} ownership={ownership} myPlayerIndex={isOnline ? myPlayerIndex : null} />
+
+      {/* Tài sản của tôi */}
+      <MyAssets players={players} ownership={ownership} myId={isOnline ? myPlayerIndex : currentPlayerIndex} isOnline={isOnline} />
 
       {/* Log */}
       <div className="panel-section" style={{ flex: 1, overflow: 'hidden' }}>
@@ -142,7 +165,7 @@ function Die({ value, rolled }) {
   )
 }
 
-function PlayerRow({ player, isActive, isMe }) {
+function PlayerRow({ player, isActive, isMe, isDisconnected }) {
   const space = BOARD_SPACES[player.position]
   return (
     <div style={{
@@ -157,7 +180,9 @@ function PlayerRow({ player, isActive, isMe }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '12px', fontWeight: 700, color: isActive ? '#3fb950' : '#e6edf3', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {player.name} {player.inJail ? '🛂' : ''}{isMe && <span style={{ marginLeft: '4px', fontSize: '9px', color: '#4169e1', background: 'rgba(65,105,225,0.15)', padding: '1px 5px', borderRadius: '3px' }}>bạn</span>}
+          {player.name} {player.inJail ? '🛂' : ''}
+          {isMe && <span style={{ marginLeft: '4px', fontSize: '9px', color: '#4169e1', background: 'rgba(65,105,225,0.15)', padding: '1px 5px', borderRadius: '3px' }}>bạn</span>}
+          {isDisconnected && <span style={{ marginLeft: '4px', fontSize: '9px', color: '#ffd700', background: 'rgba(255,215,0,0.12)', padding: '1px 5px', borderRadius: '3px' }}>🔌 tự chơi</span>}
         </div>
         <div style={{ fontSize: '10px', color: '#8b949e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {space?.name || '—'}
@@ -166,6 +191,82 @@ function PlayerRow({ player, isActive, isMe }) {
       <div style={{ fontSize: '12px', fontWeight: 700, color: '#ffd700', flexShrink: 0 }}>
         ${player.money.toLocaleString()}
       </div>
+    </div>
+  )
+}
+
+// ── Tổng tài sản & xếp hạng realtime ───────────────────────────────────────────
+function NetWorthRanking({ players, ownership, myPlayerIndex }) {
+  const ranked = [...players]
+    .map(p => ({ ...p, netWorth: calculateNetWorth(p, ownership) }))
+    .sort((a, b) => b.netWorth - a.netWorth)
+
+  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣']
+
+  return (
+    <div className="panel-section">
+      <div style={{ fontSize: '11px', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+        Xếp hạng tổng tài sản
+      </div>
+      {ranked.map((p, i) => (
+        <div key={p.id} style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          padding: '5px 8px', borderRadius: '8px', marginBottom: '3px',
+          background: p.id === myPlayerIndex ? 'rgba(65,105,225,0.08)' : 'transparent',
+          opacity: p.bankrupt ? 0.4 : 1,
+        }}>
+          <span style={{ fontSize: '13px', flexShrink: 0 }}>{medals[i] || `${i + 1}.`}</span>
+          <span style={{ fontSize: '13px', flexShrink: 0 }}>{p.emoji}</span>
+          <div style={{ flex: 1, fontSize: '12px', fontWeight: 700, color: '#e6edf3', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {p.name}
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 800, color: '#3fb950' }}>
+            ${p.netWorth.toLocaleString()}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── Tài sản của tôi ─────────────────────────────────────────────────────────────
+function MyAssets({ players, ownership, myId, isOnline }) {
+  const me = players.find(p => p.id === myId)
+  if (!me) return null
+
+  const owned = Object.entries(ownership)
+    .filter(([, ownerId]) => ownerId === myId)
+    .map(([spaceId]) => BOARD_SPACES[+spaceId])
+    .filter(Boolean)
+
+  const totalValue = owned.reduce((sum, s) => sum + (s.price || 0), 0)
+
+  return (
+    <div className="panel-section">
+      <div style={{ fontSize: '11px', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+        🏳️ Tài sản của {isOnline ? 'tôi' : me.name}
+      </div>
+      {owned.length === 0 ? (
+        <div style={{ fontSize: '12px', color: '#484f58', fontStyle: 'italic', textAlign: 'center', padding: '6px' }}>
+          Chưa sở hữu tài sản nào
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '140px', overflowY: 'auto' }}>
+            {owned.map(s => (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                <span>{s.icon}</span>
+                <span style={{ flex: 1, color: '#e6edf3', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</span>
+                <span style={{ color: '#ffd700', fontWeight: 700 }}>${s.price}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #21262d', display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+            <span style={{ color: '#8b949e' }}>Tổng giá trị ({owned.length})</span>
+            <span style={{ color: '#3fb950', fontWeight: 800 }}>${totalValue.toLocaleString()}</span>
+          </div>
+        </>
+      )}
     </div>
   )
 }

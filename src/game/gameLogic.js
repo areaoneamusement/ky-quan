@@ -67,6 +67,13 @@ export function calculateUtilityRent(ownerId, ownership, dice) {
   return (dice[0] + dice[1]) * (count === 2 ? 10 : 4)
 }
 
+export function calculateNetWorth(player, ownership) {
+  const propertyValue = Object.entries(ownership)
+    .filter(([, ownerId]) => ownerId === player.id)
+    .reduce((sum, [spaceId]) => sum + (BOARD_SPACES[+spaceId]?.price || 0), 0)
+  return player.money + propertyValue
+}
+
 export function shuffleArray(arr) {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
