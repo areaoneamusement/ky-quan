@@ -130,7 +130,7 @@ function Die({ value, rolled }) {
       background: rolled ? '#e6edf3' : '#21262d',
       border: '2px solid ' + (rolled ? '#e6edf3' : '#30363d'),
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: '32px', transition: 'all 0.2s', color: '#1a1a2e',
+      fontSize: '32px', transition: 'all 0.2s', color: rolled ? '#1a1a2e' : '#30363d',
     }}>
       {DICE_FACES[value] || '⚀'}
     </div>

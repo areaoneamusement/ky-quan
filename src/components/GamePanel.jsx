@@ -151,7 +151,7 @@ function Die({ value, rolled }) {
       border: '2px solid ' + (rolled ? '#e6edf3' : '#30363d'),
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: '32px', transition: 'all 0.2s',
-      color: '#1a1a2e',
+      color: rolled ? '#1a1a2e' : '#30363d',
     }}>
       {faces[value] || '⚀'}
     </div>
