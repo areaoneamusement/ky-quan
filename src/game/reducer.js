@@ -182,9 +182,15 @@ export function reducer(state, action) {
       const winner = getPlayer(s, winnerId)
       s = addLog(s, `🏁 ${winner.emoji} ${winner.name} đi trước! Bắt đầu trò chơi!`)
       return {
-        ...s, phase: 'playing', turnOrder, currentPlayerIndex: winnerId,
-        orderRollQueue: [], orderRolls: [], diceRolled: false, dice: [1, 1],
+        ...s, phase: 'order_result', turnOrder, currentPlayerIndex: winnerId,
+        orderRollQueue: [], orderRolls,
       }
+    }
+
+    // ── bắt đầu chơi sau khi hiển thị kết quả xác định thứ tự ────────────────
+    case 'BEGIN_PLAY': {
+      if (state.phase !== 'order_result') return state
+      return { ...state, phase: 'playing', diceRolled: false, dice: [1, 1], orderRolls: [] }
     }
 
     // ── roll dice ──────────────────────────────────────────────────────────

@@ -53,7 +53,7 @@ function publicLobby(lobbyPlayers) {
 function maybeRunBot(room) {
   if (!room || room.phase !== 'playing' || !room.gameState) return
   const gs = room.gameState
-  if (gs.phase !== 'playing' && gs.phase !== 'order_roll') return
+  if (gs.phase !== 'playing' && gs.phase !== 'order_roll' && gs.phase !== 'order_result') return
   const idx = gs.phase === 'order_roll' ? gs.orderRollQueue[0] : gs.currentPlayerIndex
   if (idx === undefined) return
   const lp = room.lobbyPlayers[idx]
@@ -68,7 +68,7 @@ function maybeRunBot(room) {
 function botStep(room) {
   if (!room || room.phase !== 'playing' || !room.gameState) return
   const gs = room.gameState
-  if (gs.phase !== 'playing' && gs.phase !== 'order_roll') return
+  if (gs.phase !== 'playing' && gs.phase !== 'order_roll' && gs.phase !== 'order_result') return
   const idx = gs.phase === 'order_roll' ? gs.orderRollQueue[0] : gs.currentPlayerIndex
   const lp = room.lobbyPlayers[idx]
   if (!lp || lp.connected) return
@@ -76,6 +76,8 @@ function botStep(room) {
   let action
   if (gs.phase === 'order_roll') {
     action = { type: 'ROLL_ORDER' }
+  } else if (gs.phase === 'order_result') {
+    action = { type: 'BEGIN_PLAY' }
   } else {
     const player = gs.players[idx]
     if (gs.pendingAction) {

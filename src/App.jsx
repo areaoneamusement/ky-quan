@@ -82,7 +82,7 @@ function GameApp() {
   if (phase === 'setup') return <SetupScreen />
 
   // Roll-for-order phase before the actual game begins
-  if (phase === 'order_roll') {
+  if (phase === 'order_roll' || phase === 'order_result') {
     return (
       <>
         <ConnectionBanner />
