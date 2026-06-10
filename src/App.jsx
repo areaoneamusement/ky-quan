@@ -11,6 +11,7 @@ import { loadSession } from './utils/playerId'
 import { canAutoEndTurn } from './game/reducer'
 import { WifiOff } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Emoji from './components/Emoji'
 
 // ─── Top banner — shows the latest log line whenever dice are rolled ────────
 
@@ -45,7 +46,7 @@ function TopBanner() {
           exit={{ opacity: 0, y: -16, x: '-50%' }}
           transition={{ type: 'spring', stiffness: 380, damping: 28 }}
         >
-          🎲 {log[0]}
+          <Emoji symbol="🎲" /> {log[0]}
         </motion.div>
       )}
     </AnimatePresence>
@@ -140,7 +141,7 @@ function HomeScreen({ onSolo, onOnline }) {
         boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
         textAlign: 'center',
       }}>
-        <div style={{ fontSize: '56px', marginBottom: '10px' }}>🌍</div>
+        <div style={{ marginBottom: '10px' }}><Emoji symbol="🌍" size="56px" /></div>
         <h1 className="font-display" style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '0.08em', color: '#e6edf3', marginBottom: '4px' }}>
           KỲ QUAN XÓM LÀO
         </h1>
@@ -158,7 +159,7 @@ function HomeScreen({ onSolo, onOnline }) {
             onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
             onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
-            👤 CHƠI ĐỘC LẬP
+            <Emoji symbol="👤" /> CHƠI ĐỘC LẬP
           </button>
 
           <button onClick={onOnline} style={{
@@ -170,7 +171,7 @@ function HomeScreen({ onSolo, onOnline }) {
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(65,105,225,0.25)'; e.currentTarget.style.color = '#e6edf3' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(65,105,225,0.12)'; e.currentTarget.style.color = '#79b8ff' }}
           >
-            🌐 CHƠI ONLINE
+            <Emoji symbol="🌐" /> CHƠI ONLINE
           </button>
         </div>
 

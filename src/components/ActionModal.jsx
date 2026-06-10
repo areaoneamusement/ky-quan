@@ -2,6 +2,7 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BOARD_SPACES, GROUPS } from '../data/boardData'
 import { useGame } from '../context/GameContext'
+import Emoji from './Emoji'
 
 export default function ActionModal() {
   const { state, dispatch } = useGame()
@@ -42,7 +43,7 @@ export default function ActionModal() {
         {/* Space header (property / airport / utility / tax) */}
         {showHdr && (
           <>
-            <div style={{ fontSize: '44px', marginBottom: '6px' }}>{space.icon}</div>
+            <div style={{ marginBottom: '6px' }}><Emoji symbol={space.icon} size="44px" /></div>
             {group && (
               <div style={{
                 display: 'inline-block', padding: '2px 10px', borderRadius: '999px',
@@ -94,7 +95,7 @@ function BuyContent({ space, player, dispatch }) {
         borderRadius: '8px', padding: '10px 12px', marginBottom: '12px',
         textAlign: 'left', fontSize: '11px', color: '#8b949e', lineHeight: 1.7,
       }}>
-        <div style={{ color: '#58a6ff', fontWeight: 700, marginBottom: '4px' }}>📋 Luật chơi</div>
+        <div style={{ color: '#58a6ff', fontWeight: 700, marginBottom: '4px' }}><Emoji symbol="📋" /> Luật chơi</div>
         <div>• <b style={{ color: '#e6edf3' }}>Mua đứt</b> → sở hữu, thu tiền thuê từ người khác</div>
         <div>• <b style={{ color: '#e6edf3' }}>Tiền thuê</b> → người đến ô của bạn trả tiền</div>
         <div>• <b style={{ color: '#e6edf3' }}>Độc quyền</b> → sở hữu cả nhóm màu, tiền thuê ×2</div>
@@ -108,10 +109,10 @@ function BuyContent({ space, player, dispatch }) {
 
       <div style={{ display: 'flex', gap: '10px' }}>
         <Btn primary onClick={() => dispatch({ type: 'BUY_PROPERTY' })} disabled={!canAfford}>
-          🏳️ Mua ngay
+          <Emoji symbol="🏳️" /> Mua ngay
         </Btn>
         <Btn onClick={() => dispatch({ type: 'DECLINE_PROPERTY' })}>
-          ⏭ Bỏ qua
+          <Emoji symbol="⏭️" /> Bỏ qua
         </Btn>
       </div>
     </>
@@ -127,7 +128,7 @@ function RentContent({ pa, players, dispatch }) {
         background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.3)',
         borderRadius: '10px', padding: '16px', marginBottom: '16px',
       }}>
-        <div style={{ fontSize: '28px', marginBottom: '6px' }}>💸</div>
+        <div style={{ marginBottom: '6px' }}><Emoji symbol="💸" size="28px" /></div>
         <div className="font-display" style={{ fontSize: '26px', fontWeight: 800, color: '#ff7b72' }}>${pa.amount}</div>
         <div style={{ fontSize: '12px', color: '#8b949e', marginTop: '6px' }}>
           Tiền thuê cho{' '}
@@ -137,7 +138,7 @@ function RentContent({ pa, players, dispatch }) {
         </div>
       </div>
       <Btn primary onClick={() => dispatch({ type: 'RESOLVE_LAND' })}>
-        ✅ Xác nhận trả tiền
+        <Emoji symbol="✅" /> Xác nhận trả tiền
       </Btn>
     </>
   )
@@ -152,7 +153,7 @@ function OwnContent({ space, dispatch }) {
         borderRadius: '10px', padding: '14px', marginBottom: '16px',
       }}>
         <div style={{ fontSize: '18px', fontWeight: 800, color: '#3fb950', marginBottom: '4px' }}>
-          🏳️ Tài sản của bạn!
+          <Emoji symbol="🏳️" /> Tài sản của bạn!
         </div>
         {space?.baseRent && (
           <div style={{ fontSize: '12px', color: '#8b949e' }}>
@@ -161,7 +162,7 @@ function OwnContent({ space, dispatch }) {
         )}
       </div>
       <Btn primary onClick={() => dispatch({ type: 'RESOLVE_LAND' })}>
-        ✅ Tiếp tục
+        <Emoji symbol="✅" /> Tiếp tục
       </Btn>
     </>
   )
@@ -173,7 +174,7 @@ function CardContent({ pa, dispatch }) {
   const isChance = deck === 'chance'
   return (
     <>
-      <div style={{ fontSize: '36px', marginBottom: '6px' }}>{isChance ? '🧭' : '📜'}</div>
+      <div style={{ marginBottom: '6px' }}><Emoji symbol={isChance ? '🧭' : '📜'} size="36px" /></div>
       <div style={{
         fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.12em',
         color: isChance ? '#ff8c32' : '#a371f7', fontWeight: 700, marginBottom: '10px',
@@ -187,7 +188,7 @@ function CardContent({ pa, dispatch }) {
         {card.desc}
       </p>
       <Btn primary onClick={() => dispatch({ type: 'RESOLVE_CARD', card })}>
-        ✅ Xác nhận
+        <Emoji symbol="✅" /> Xác nhận
       </Btn>
     </>
   )
@@ -202,14 +203,14 @@ function TaxContent({ pa, player, dispatch }) {
         background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.3)',
         borderRadius: '10px', padding: '16px', marginBottom: '16px',
       }}>
-        <div style={{ fontSize: '28px', marginBottom: '6px' }}>💸</div>
+        <div style={{ marginBottom: '6px' }}><Emoji symbol="💸" size="28px" /></div>
         <div className="font-display" style={{ fontSize: '26px', fontWeight: 800, color: '#ff7b72' }}>−${pa.amount}</div>
         <div style={{ fontSize: '12px', color: '#8b949e', marginTop: '6px' }}>
           Số dư: ${player.money} → <span style={{ color: after < 0 ? '#ff4d4d' : '#3fb950' }}>${after}</span>
         </div>
       </div>
       <Btn primary onClick={() => dispatch({ type: 'RESOLVE_LAND' })}>
-        ✅ Xác nhận
+        <Emoji symbol="✅" /> Xác nhận
       </Btn>
     </>
   )
@@ -219,7 +220,7 @@ function TaxContent({ pa, player, dispatch }) {
 function JailContent({ dispatch }) {
   return (
     <>
-      <div style={{ fontSize: '52px', margin: '4px 0 10px' }}>🚫</div>
+      <div style={{ margin: '4px 0 10px' }}><Emoji symbol="🚫" size="52px" /></div>
       <h3 className="font-display" style={{ fontSize: '18px', fontWeight: 800, color: '#ff7b72', margin: '0 0 8px' }}>
         Bị giam tại Biên Giới!
       </h3>
@@ -227,7 +228,7 @@ function JailContent({ dispatch }) {
         Không được di chuyển. Tung đôi hoặc nộp $50 để thoát ra.
       </p>
       <Btn primary onClick={() => dispatch({ type: 'RESOLVE_LAND' })}>
-        😔 Vào tù thôi
+        <Emoji symbol="😔" /> Vào tù thôi
       </Btn>
     </>
   )
@@ -243,13 +244,13 @@ function CornerContent({ space, dispatch }) {
 
   return (
     <>
-      <div style={{ fontSize: '48px', margin: '4px 0 10px' }}>{info.icon}</div>
+      <div style={{ margin: '4px 0 10px' }}><Emoji symbol={info.icon} size="48px" /></div>
       <h3 className="font-display" style={{ fontSize: '17px', fontWeight: 800, color: '#e6edf3', margin: '0 0 8px' }}>
         {info.title}
       </h3>
       <p style={{ fontSize: '13px', color: '#8b949e', marginBottom: '20px' }}>{info.msg}</p>
       <Btn primary onClick={() => dispatch({ type: 'RESOLVE_LAND' })}>
-        ✅ Tiếp tục
+        <Emoji symbol="✅" /> Tiếp tục
       </Btn>
     </>
   )

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { PLAYER_PRESETS } from '../game/gameLogic'
 import { useGame } from '../context/GameContext'
+import Emoji from './Emoji'
 
 export default function SetupScreen() {
   const { dispatch } = useGame()
@@ -28,7 +29,7 @@ export default function SetupScreen() {
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '8px' }}>🌍</div>
+          <div style={{ marginBottom: '8px' }}><Emoji symbol="🌍" size="48px" /></div>
           <h1 style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '0.06em', color: '#e6edf3', marginBottom: '4px' }}>
             KỲ QUAN XÓM LÀO
           </h1>
@@ -69,9 +70,9 @@ export default function SetupScreen() {
                 width: '36px', height: '36px', borderRadius: '50%',
                 background: PLAYER_PRESETS[i].color,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '16px', flexShrink: 0,
+                flexShrink: 0,
               }}>
-                {PLAYER_PRESETS[i].emoji}
+                <Emoji symbol={PLAYER_PRESETS[i].emoji} size="17px" />
               </div>
               <input
                 value={names[i]}
@@ -99,7 +100,7 @@ export default function SetupScreen() {
           onMouseEnter={e => e.target.style.opacity = '0.85'}
           onMouseLeave={e => e.target.style.opacity = '1'}
         >
-          🚀 BẮT ĐẦU CHƠI
+          <Emoji symbol="🚀" /> BẮT ĐẦU CHƠI
         </button>
       </div>
     </div>

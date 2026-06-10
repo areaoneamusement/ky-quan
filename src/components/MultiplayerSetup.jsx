@@ -4,6 +4,7 @@ import { Copy, Check, QrCode } from 'lucide-react'
 import { socket } from '../socket'
 import { PLAYER_PRESETS } from '../game/gameLogic'
 import { getPlayerId, saveSession, loadSession, clearSession } from '../utils/playerId'
+import Emoji from './Emoji'
 
 // ─── Sub-screens ─────────────────────────────────────────────────────────────
 
@@ -11,7 +12,7 @@ function ConnectingScreen({ message }) {
   return (
     <div style={cardStyle}>
       <div style={{ textAlign: 'center', padding: '32px 0' }}>
-        <div style={{ fontSize: '44px', marginBottom: '12px' }}>🌐</div>
+        <div style={{ marginBottom: '12px' }}><Emoji symbol="🌐" size="44px" /></div>
         <p style={{ color: '#8b949e', fontSize: '13px' }}>{message}</p>
       </div>
     </div>
@@ -98,7 +99,7 @@ function SetupForm({ onBack, onEnterLobby, initialJoinCode, connError }) {
     <div style={cardStyle}>
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <div style={{ fontSize: '44px', marginBottom: '6px' }}>🌐</div>
+        <div style={{ marginBottom: '6px' }}><Emoji symbol="🌐" size="44px" /></div>
         <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#e6edf3', letterSpacing: '0.06em' }}>
           CHƠI ONLINE
         </h2>
@@ -107,7 +108,7 @@ function SetupForm({ onBack, onEnterLobby, initialJoinCode, connError }) {
 
       {connError && (
         <div style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.3)', borderRadius: '8px', padding: '8px 12px', marginBottom: '14px', fontSize: '12px', color: '#ffd700' }}>
-          ⏳ {connError}
+          <Emoji symbol="⏳" /> {connError}
         </div>
       )}
 
@@ -132,23 +133,23 @@ function SetupForm({ onBack, onEnterLobby, initialJoinCode, connError }) {
             background: p.color,
             border: presetIdx === i ? '3px solid #e6edf3' : '3px solid transparent',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '18px', cursor: 'pointer', transition: 'border 0.15s',
+            cursor: 'pointer', transition: 'border 0.15s',
             flexShrink: 0,
           }}>
-            {p.emoji}
+            <Emoji symbol={p.emoji} size="19px" />
           </button>
         ))}
       </div>
 
       {error && (
         <div style={{ background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.3)', borderRadius: '8px', padding: '8px 12px', marginBottom: '14px', fontSize: '12px', color: '#ff7b72' }}>
-          ⚠️ {error}
+          <Emoji symbol="⚠️" /> {error}
         </div>
       )}
 
       {/* Create room */}
       <button onClick={createRoom} disabled={loading} style={primaryBtnStyle(loading)}>
-        {loading ? '⏳ Đang kết nối...' : '🏠 Tạo phòng mới'}
+        {loading ? <><Emoji symbol="⏳" /> Đang kết nối...</> : <><Emoji symbol="🏠" /> Tạo phòng mới</>}
       </button>
 
       {/* Divider */}
@@ -175,7 +176,7 @@ function SetupForm({ onBack, onEnterLobby, initialJoinCode, connError }) {
           background: loading ? '#21262d' : 'linear-gradient(135deg,#4169e1,#6e40c9)',
           flex: 'none', width: '90px',
         }}>
-          🚪 Vào
+          <Emoji symbol="🚪" /> Vào
         </button>
       </div>
 
@@ -248,7 +249,7 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
     <div style={cardStyle}>
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <div style={{ fontSize: '44px', marginBottom: '6px' }}>🏠</div>
+        <div style={{ marginBottom: '6px' }}><Emoji symbol="🏠" size="44px" /></div>
         <h2 style={{ fontSize: '18px', fontWeight: 900, color: '#e6edf3' }}>Phòng Chờ</h2>
       </div>
 
@@ -313,9 +314,9 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
             <div style={{
               width: '32px', height: '32px', borderRadius: '50%',
               background: p.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '15px', flexShrink: 0,
+              flexShrink: 0,
             }}>
-              {p.emoji}
+              <Emoji symbol={p.emoji} size="16px" />
             </div>
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: '13px', fontWeight: 700, color: '#e6edf3' }}>{p.name}</span>
@@ -360,14 +361,14 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
 
       {error && (
         <div style={{ background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.3)', borderRadius: '8px', padding: '8px 12px', marginBottom: '14px', fontSize: '12px', color: '#ff7b72' }}>
-          ⚠️ {error}
+          <Emoji symbol="⚠️" /> {error}
         </div>
       )}
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: '8px' }}>
         <button onClick={leaveRoom} style={{ ...secondaryBtnStyle, flex: 1 }}>
-          👋 Rời phòng
+          <Emoji symbol="👋" /> Rời phòng
         </button>
         {isHost && (
           <button
@@ -375,12 +376,12 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
             disabled={players.length < 2}
             style={{ ...primaryBtnStyle(players.length < 2), flex: 2 }}
           >
-            🚀 Bắt đầu ({players.length} người)
+            <Emoji symbol="🚀" /> Bắt đầu ({players.length} người)
           </button>
         )}
         {!isHost && (
           <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#484f58', fontStyle: 'italic' }}>
-            ⏳ Chờ host bắt đầu...
+            <Emoji symbol="⏳" /> Chờ host bắt đầu...
           </div>
         )}
       </div>

@@ -1,5 +1,6 @@
 import React from 'react'
 import { GROUPS, getGridPos, getSide } from '../data/boardData'
+import Emoji from './Emoji'
 
 const STRIP_STYLES = {
   bottom: { top: 0, left: 0, right: 0, height: '22%', position: 'absolute', zIndex: 2 },
@@ -51,7 +52,7 @@ function PlayerTokens({ players }) {
           lineHeight: 1,
           flexShrink: 0,
         }}>
-          {p.emoji}
+          <Emoji symbol={p.emoji} />
         </div>
       ))}
     </div>
@@ -70,7 +71,7 @@ function HereTag() {
       boxShadow: '0 0 6px rgba(65,105,225,0.8)',
       animation: 'pulseHere 1.2s ease infinite alternate',
     }}>
-      📍 Bạn
+      <Emoji symbol="📍" /> Bạn
     </div>
   )
 }
@@ -89,7 +90,7 @@ function GhostToken({ player }) {
       boxShadow: `0 0 12px 4px ${player.color}`,
       animation: 'ghostHop 0.22s ease',
     }}>
-      {player.emoji}
+      <Emoji symbol={player.emoji} />
     </div>
   )
 }
@@ -123,7 +124,7 @@ function PropertyCell({ space, side, playersHere, ownerColor, isMyPosition, ghos
       <OwnerDot color={ownerColor} />
       {isMyPosition && <HereTag />}
       <div className="cell-inner" style={PADDING_STYLES[side]}>
-        <div className="cell-icon">{space.icon}</div>
+        <div className="cell-icon"><Emoji symbol={space.icon} /></div>
         <div className="cell-name">{space.name}</div>
         {space.country && <div className="cell-country">{space.country}</div>}
         <div className="cell-price">${space.price}</div>
@@ -143,7 +144,7 @@ function SpecialCell({ space, side, playersHere, ownerColor, isMyPosition, ghost
       <OwnerDot color={ownerColor} />
       {isMyPosition && <HereTag />}
       <div className="cell-inner" style={PADDING_STYLES[side]}>
-        <div className="cell-icon">{space.icon}</div>
+        <div className="cell-icon"><Emoji symbol={space.icon} /></div>
         <div className="cell-name">{space.name}</div>
         {space.amount  && <div className="cell-price" style={{ color: '#ff7b72' }}>−${space.amount}</div>}
         {space.price   && space.type !== 'property' && <div className="cell-price">${space.price}</div>}
@@ -162,7 +163,7 @@ function CornerCell({ space, playersHere, isMyPosition, ghostPlayer, highlight }
     <div className="board-cell" style={{ gridRow: row, gridColumn: col, background: CORNER_BG[space.subtype], ...(highlight ? HIGHLIGHT_STYLE : {}) }} title={space.name}>
       {isMyPosition && <HereTag />}
       <div className="corner-inner">
-        <div className="corner-icon">{space.icon}</div>
+        <div className="corner-icon"><Emoji symbol={space.icon} /></div>
         <div className="corner-name">{space.name}</div>
         {space.desc && <div className="corner-desc">{space.desc}</div>}
       </div>

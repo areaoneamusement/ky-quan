@@ -1,5 +1,6 @@
 import React from 'react'
 import { LogOut, Globe } from 'lucide-react'
+import Emoji from './Emoji'
 import { useGame } from '../context/GameContext'
 import { BOARD_SPACES } from '../data/boardData'
 import { isDoubles, calculateNetWorth } from '../game/gameLogic'
@@ -20,7 +21,7 @@ export default function GamePanel() {
     return (
       <div className="game-panel">
         <div style={{ textAlign: 'center', padding: '24px 0' }}>
-          <div style={{ fontSize: '56px', marginBottom: '8px' }}>🏆</div>
+          <div style={{ marginBottom: '8px' }}><Emoji symbol="🏆" size="56px" /></div>
           <h2 className="font-display" style={{ color: '#ffd700', fontSize: '20px', fontWeight: 800 }}>{w?.name}</h2>
           <p style={{ color: '#8b949e', fontSize: '13px' }}>Chiến Thắng!</p>
           <p className="font-display" style={{ color: '#3fb950', fontSize: '18px', fontWeight: 700, marginTop: '8px' }}>
@@ -56,14 +57,14 @@ export default function GamePanel() {
           <div style={{
             width: '40px', height: '40px', borderRadius: '50%',
             background: player.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
-          }}>{player.emoji}</div>
+          }}><Emoji symbol={player.emoji} size="20px" /></div>
           <div>
             <div style={{ fontWeight: 800, fontSize: '15px', color: '#e6edf3' }}>
               {player.name}
-              {isOnline && <span style={{ marginLeft: '6px', fontSize: '9px', color: '#4169e1', background: 'rgba(65,105,225,0.15)', padding: '2px 5px', borderRadius: '4px' }}>🌐</span>}
+              {isOnline && <span style={{ marginLeft: '6px', fontSize: '9px', color: '#4169e1', background: 'rgba(65,105,225,0.15)', padding: '2px 5px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center' }}><Emoji symbol="🌐" size="10px" /></span>}
             </div>
             <div style={{ fontSize: '11px', color: '#8b949e' }}>
-              {isOnline && !isMyTurn ? '⏳ Chờ lượt...' : 'Lượt đang chơi'}
+              {isOnline && !isMyTurn ? <><Emoji symbol="⏳" size="10px" /> Chờ lượt...</> : 'Lượt đang chơi'}
             </div>
           </div>
           <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
@@ -75,7 +76,7 @@ export default function GamePanel() {
         {/* In jail indicator */}
         {player.inJail && (
           <div style={{ background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.3)', borderRadius: '8px', padding: '8px 12px', marginBottom: '8px', fontSize: '12px', color: '#ff7b72' }}>
-            🛂 Đang bị giam — lượt {player.jailTurns}/{3}
+            <Emoji symbol="🛂" /> Đang bị giam — lượt {player.jailTurns}/{3}
             {player.jailFreeCards > 0 && (
               <button onClick={() => dispatch({ type: 'USE_JAIL_FREE' })} disabled={!isMyTurn} style={smallBtnStyle('#a371f7', !isMyTurn)}>
                 Dùng thẻ tự do
@@ -101,7 +102,7 @@ export default function GamePanel() {
             disabled={!canRoll}
             style={actionBtnStyle(!canRoll, canReroll ? 'reroll' : 'primary')}
           >
-            {canReroll ? '🎲 Tung Lại!' : '🎲 Tung Xúc Xắc'}
+            <Emoji symbol="🎲" /> {canReroll ? 'Tung Lại!' : 'Tung Xúc Xắc'}
           </button>
         </div>
       </div>
@@ -167,14 +168,14 @@ function PlayerRow({ player, isActive, isMe, isDisconnected }) {
       border: isActive ? '1px solid rgba(63,185,80,0.2)' : '1px solid transparent',
       opacity: player.bankrupt ? 0.4 : 1,
     }}>
-      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: player.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}>
-        {player.emoji}
+      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: player.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Emoji symbol={player.emoji} size="15px" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '12px', fontWeight: 700, color: isActive ? '#3fb950' : '#e6edf3', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {player.name} {player.inJail ? '🛂' : ''}
+          {player.name} {player.inJail ? <Emoji symbol="🛂" /> : ''}
           {isMe && <span style={{ marginLeft: '4px', fontSize: '9px', color: '#4169e1', background: 'rgba(65,105,225,0.15)', padding: '1px 5px', borderRadius: '3px' }}>bạn</span>}
-          {isDisconnected && <span style={{ marginLeft: '4px', fontSize: '9px', color: '#ffd700', background: 'rgba(255,215,0,0.12)', padding: '1px 5px', borderRadius: '3px' }}>🔌 tự chơi</span>}
+          {isDisconnected && <span style={{ marginLeft: '4px', fontSize: '9px', color: '#ffd700', background: 'rgba(255,215,0,0.12)', padding: '1px 5px', borderRadius: '3px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}><Emoji symbol="🔌" size="10px" /> tự chơi</span>}
         </div>
         <div style={{ fontSize: '10px', color: '#8b949e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {space?.name || '—'}
@@ -207,8 +208,10 @@ function NetWorthRanking({ players, ownership, myPlayerIndex }) {
           background: p.id === myPlayerIndex ? 'rgba(65,105,225,0.08)' : 'transparent',
           opacity: p.bankrupt ? 0.4 : 1,
         }}>
-          <span style={{ fontSize: '13px', flexShrink: 0 }}>{medals[i] || `${i + 1}.`}</span>
-          <span style={{ fontSize: '13px', flexShrink: 0 }}>{p.emoji}</span>
+          <span style={{ fontSize: '13px', flexShrink: 0 }}>
+            {medals[i] ? <Emoji symbol={medals[i]} /> : `${i + 1}.`}
+          </span>
+          <span style={{ flexShrink: 0 }}><Emoji symbol={p.emoji} /></span>
           <div style={{ flex: 1, fontSize: '12px', fontWeight: 700, color: '#e6edf3', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {p.name}
           </div>
@@ -236,7 +239,7 @@ function MyAssets({ players, ownership, myId, isOnline }) {
   return (
     <div className="panel-section">
       <div style={{ fontSize: '11px', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
-        🏳️ Tài sản của {isOnline ? 'tôi' : me.name}
+        <Emoji symbol="🏳️" /> Tài sản của {isOnline ? 'tôi' : me.name}
       </div>
       {owned.length === 0 ? (
         <div style={{ fontSize: '12px', color: '#484f58', fontStyle: 'italic', textAlign: 'center', padding: '6px' }}>

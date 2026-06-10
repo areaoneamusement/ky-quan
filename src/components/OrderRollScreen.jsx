@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useGame } from '../context/GameContext'
+import Emoji from './Emoji'
 
 const DICE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
 const RESULT_DELAY_MS = 4000
@@ -40,13 +41,13 @@ export default function OrderRollScreen() {
         padding: '32px', width: '100%', maxWidth: '440px',
         boxShadow: '0 24px 64px rgba(0,0,0,0.6)', textAlign: 'center',
       }}>
-        <div style={{ fontSize: '48px', marginBottom: '8px' }}>{isResult ? '🏁' : '🎲'}</div>
+        <div style={{ marginBottom: '8px' }}><Emoji symbol={isResult ? '🏁' : '🎲'} size="48px" /></div>
         <h2 className="font-display" style={{ fontSize: '20px', fontWeight: 800, color: '#e6edf3', marginBottom: '4px', letterSpacing: '0.04em' }}>
           {isResult ? 'KẾT QUẢ THỨ TỰ CHƠI' : 'XÁC ĐỊNH THỨ TỰ CHƠI'}
         </h2>
         <p style={{ fontSize: '12px', color: '#8b949e', marginBottom: '24px' }}>
           {isResult
-            ? `${winner?.emoji || ''} ${winner?.name || ''} có điểm cao nhất — đi trước tiên!`
+            ? <>{winner?.emoji && <Emoji symbol={winner.emoji} />} {winner?.name || ''} có điểm cao nhất — đi trước tiên!</>
             : 'Mỗi người tung xúc xắc một lần — ai cao nhất đi trước!'}
         </p>
 
@@ -74,17 +75,17 @@ export default function OrderRollScreen() {
                 <div style={{
                   width: '32px', height: '32px', borderRadius: '50%',
                   background: p.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '15px', flexShrink: 0,
-                }}>{p.emoji}</div>
+                  flexShrink: 0,
+                }}><Emoji symbol={p.emoji} size="16px" /></div>
                 <div style={{ flex: 1, textAlign: 'left', fontSize: '13px', fontWeight: 700, color: '#e6edf3' }}>
                   {p.name}
-                  {isWinner && <span style={{ marginLeft: '6px' }}>🏆</span>}
+                  {isWinner && <span style={{ marginLeft: '6px' }}><Emoji symbol="🏆" /></span>}
                   {isOnline && p.id === myPlayerIndex && (
                     <span style={{ marginLeft: '6px', fontSize: '9px', color: '#4169e1', background: 'rgba(65,105,225,0.15)', padding: '1px 5px', borderRadius: '3px' }}>bạn</span>
                   )}
                 </div>
                 <div style={{ fontSize: '14px', fontWeight: 800, color: result ? '#ffd700' : '#484f58' }}>
-                  {result ? result.value : (isCurrent ? '🎲...' : '—')}
+                  {result ? result.value : (isCurrent ? <><Emoji symbol="🎲" />...</> : '—')}
                 </div>
               </div>
             )
@@ -94,7 +95,7 @@ export default function OrderRollScreen() {
         {/* Roll button / countdown */}
         {isResult ? (
           <div style={{ fontSize: '13px', color: '#8b949e', fontStyle: 'italic', padding: '14px' }}>
-            ⏳ Bắt đầu trò chơi sau {countdown}s...
+            <Emoji symbol="⏳" /> Bắt đầu trò chơi sau {countdown}s...
           </div>
         ) : isMyTurn ? (
           <button
@@ -105,11 +106,11 @@ export default function OrderRollScreen() {
               color: '#fff', fontWeight: 800, fontSize: '15px', letterSpacing: '0.04em', cursor: 'pointer',
             }}
           >
-            🎲 {currentRoller?.name} — Tung xúc xắc!
+            <Emoji symbol="🎲" /> {currentRoller?.name} — Tung xúc xắc!
           </button>
         ) : (
           <div style={{ fontSize: '13px', color: '#8b949e', fontStyle: 'italic', padding: '14px' }}>
-            ⏳ Đang chờ {currentRoller?.emoji} {currentRoller?.name} tung xúc xắc...
+            <Emoji symbol="⏳" /> Đang chờ <Emoji symbol={currentRoller?.emoji} /> {currentRoller?.name} tung xúc xắc...
           </div>
         )}
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { BOARD_SPACES, GROUPS } from '../data/boardData'
 import BoardCell from './BoardCell'
 import { useGame } from '../context/GameContext'
+import Emoji from './Emoji'
 
 const DICE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
 
@@ -16,7 +17,7 @@ function DiceAnimation({ dice }) {
           <span className="die-big die-2">{DICE_FACES[dice[1]]}</span>
         </div>
         <div className="dice-total">{sum}</div>
-        {isDouble && <div className="dice-doubles">🎲 Đôi! Tung lại!</div>}
+        {isDouble && <div className="dice-doubles"><Emoji symbol="🎲" size="1.1em" /> Đôi! Tung lại!</div>}
       </div>
     </div>
   )
@@ -25,7 +26,7 @@ function DiceAnimation({ dice }) {
 function BoardCenter() {
   return (
     <div className="board-center" style={{ gridRow: '2 / 11', gridColumn: '2 / 11' }}>
-      <div className="center-globe">🌍</div>
+      <div className="center-globe"><Emoji symbol="🌍" size="1em" /></div>
       <div className="center-title">KỲ QUAN XÓM LÀO</div>
       <div className="center-subtitle">Vòng Quanh Thế Giới</div>
       <div className="center-divider" />
