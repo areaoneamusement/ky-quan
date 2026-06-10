@@ -45,6 +45,19 @@ function declareBankrupt(state, playerId) {
   return { ...s, ownership: newOwnership }
 }
 
+// Khi đã tung xúc xắc xong, không còn hành động nào chờ xử lý, và không
+// được tung lại (do được đôi) — tự động chuyển sang lượt người chơi tiếp theo.
+function canReroll(state) {
+  const player = state.players[state.currentPlayerIndex]
+  return state.diceRolled && L.isDoubles(state.dice) && state.doublesCount > 0 && !state.pendingAction && !player.inJail
+}
+
+function maybeAutoEndTurn(state) {
+  if (state.phase !== 'playing' || state.pendingAction || !state.diceRolled) return state
+  if (canReroll(state)) return state
+  return reducer(state, { type: 'END_TURN' })
+}
+
 export function processLanding(state, playerId, dice) {
   const player  = getPlayer(state, playerId)
   const space   = BOARD_SPACES[player.position]
@@ -196,7 +209,7 @@ export function reducer(state, action) {
             s = updatePlayer(s, player.id, { money: getPlayer(s, player.id).money + L.GO_BONUS })
             s = addLog(s, `🌍 ${player.name} qua Khởi Hành, nhận $${L.GO_BONUS}!`)
           }
-          return processLanding(s, player.id, dice)
+          return maybeAutoEndTurn(processLanding(s, player.id, dice))
         }
         const newJailTurns = player.jailTurns + 1
         if (newJailTurns >= L.MAX_JAIL_TURNS) {
@@ -211,17 +224,17 @@ export function reducer(state, action) {
             s = updatePlayer(s, player.id, { money: getPlayer(s, player.id).money + L.GO_BONUS })
             s = addLog(s, `🌍 ${player.name} qua Khởi Hành, nhận $${L.GO_BONUS}!`)
           }
-          return processLanding(s, player.id, dice)
+          return maybeAutoEndTurn(processLanding(s, player.id, dice))
         }
         s = updatePlayer(s, player.id, { jailTurns: newJailTurns })
-        return addLog(s, `${player.emoji} ${player.name} tung ${d1}+${d2} — không thoát Biên Giới (lượt ${newJailTurns}/${L.MAX_JAIL_TURNS})`)
+        return maybeAutoEndTurn(addLog(s, `${player.emoji} ${player.name} tung ${d1}+${d2} — không thoát Biên Giới (lượt ${newJailTurns}/${L.MAX_JAIL_TURNS})`))
       }
 
       const newDoublesCount = doubles ? state.doublesCount + 1 : 0
       if (newDoublesCount >= 3) {
         let s = { ...state, dice, diceRolled: true, doublesCount: 0 }
         s = updatePlayer(s, player.id, { inJail: true, jailTurns: 0, position: L.JAIL_POSITION })
-        return addLog(s, `🚫 ${player.name} tung đôi 3 lần — bị giam tại Biên Giới!`)
+        return maybeAutoEndTurn(addLog(s, `🚫 ${player.name} tung đôi 3 lần — bị giam tại Biên Giới!`))
       }
 
       const { newPos, passedGo } = L.movePlayer(player.position, sum)
@@ -232,7 +245,7 @@ export function reducer(state, action) {
         s = updatePlayer(s, player.id, { money: getPlayer(s, player.id).money + L.GO_BONUS })
         s = addLog(s, `🌍 ${player.name} qua Khởi Hành, nhận $${L.GO_BONUS}!`)
       }
-      return processLanding(s, player.id, dice)
+      return maybeAutoEndTurn(processLanding(s, player.id, dice))
     }
 
     // ── buy property ───────────────────────────────────────────────────────
@@ -245,11 +258,11 @@ export function reducer(state, action) {
       if (player.money < space.price) return state
       let s = { ...state, pendingAction: null, ownership: { ...state.ownership, [spaceId]: player.id } }
       s = updatePlayer(s, player.id, { money: player.money - space.price, properties: [...player.properties, spaceId] })
-      return addLog(s, `🏳️ ${player.name} mua ${space.name} ($${space.price})`)
+      return maybeAutoEndTurn(addLog(s, `🏳️ ${player.name} mua ${space.name} ($${space.price})`))
     }
 
     case 'DECLINE_PROPERTY': {
-      return { ...state, pendingAction: null }
+      return maybeAutoEndTurn({ ...state, pendingAction: null })
     }
 
     // ── resolve landing ────────────────────────────────────────────────────
@@ -259,21 +272,21 @@ export function reducer(state, action) {
       const player = state.players[state.currentPlayerIndex]
       switch (pa.landType) {
         case 'rent':
-          return payRent({ ...state, pendingAction: null }, player.id, pa.ownerId, pa.amount,
-            BOARD_SPACES[pa.spaceId]?.name || '')
+          return maybeAutoEndTurn(payRent({ ...state, pendingAction: null }, player.id, pa.ownerId, pa.amount,
+            BOARD_SPACES[pa.spaceId]?.name || ''))
         case 'tax': {
           let s = updatePlayer({ ...state, pendingAction: null }, player.id, { money: player.money - pa.amount })
           s = addLog(s, `💸 ${player.name} nộp $${pa.amount} ${BOARD_SPACES[pa.spaceId]?.name}`)
           if (player.money - pa.amount < 0) s = declareBankrupt(s, player.id)
-          return s
+          return maybeAutoEndTurn(s)
         }
         case 'gotojail': {
           let s = updatePlayer({ ...state, pendingAction: null }, player.id,
             { inJail: true, jailTurns: 0, position: L.JAIL_POSITION })
-          return addLog(s, `🚫 ${player.name} bị giam tại Biên Giới!`)
+          return maybeAutoEndTurn(addLog(s, `🚫 ${player.name} bị giam tại Biên Giới!`))
         }
         default:
-          return { ...state, pendingAction: null }
+          return maybeAutoEndTurn({ ...state, pendingAction: null })
       }
     }
 
@@ -384,7 +397,7 @@ export function reducer(state, action) {
         }
         default: break
       }
-      return s
+      return maybeAutoEndTurn(s)
     }
 
     // ── jail actions ───────────────────────────────────────────────────────

@@ -13,7 +13,6 @@ export default function GamePanel() {
 
   const canReroll  = isMyTurn && diceRolled && isDoubles(dice) && doublesCount > 0 && !pendingAction && !player?.inJail
   const canRoll    = isMyTurn && ((!diceRolled && !pendingAction && !player?.bankrupt) || canReroll)
-  const canEndTurn = isMyTurn && diceRolled && !pendingAction && !canReroll
 
   if (phase === 'ended') {
     const w = players.find(p => p.id === winner)
@@ -102,15 +101,6 @@ export default function GamePanel() {
           >
             {canReroll ? '🎲 Tung Lại!' : '🎲 Tung Xúc Xắc'}
           </button>
-          {!canReroll && (
-            <button
-              onClick={() => dispatch({ type: 'END_TURN' })}
-              disabled={!canEndTurn}
-              style={actionBtnStyle(!canEndTurn, 'secondary')}
-            >
-              ⏭ Kết Thúc
-            </button>
-          )}
         </div>
       </div>
 
