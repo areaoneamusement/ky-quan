@@ -131,7 +131,7 @@ function HomeScreen({ onSolo, onOnline }) {
         textAlign: 'center',
       }}>
         <div style={{ fontSize: '56px', marginBottom: '10px' }}>🌍</div>
-        <h1 style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '0.08em', color: '#e6edf3', marginBottom: '4px' }}>
+        <h1 className="font-display" style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '0.08em', color: '#e6edf3', marginBottom: '4px' }}>
           KỲ QUAN XÓM LÀO
         </h1>
         <p style={{ fontSize: '12px', color: '#8b949e', letterSpacing: '0.14em', marginBottom: '32px' }}>

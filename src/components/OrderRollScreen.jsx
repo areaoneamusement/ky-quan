@@ -41,7 +41,7 @@ export default function OrderRollScreen() {
         boxShadow: '0 24px 64px rgba(0,0,0,0.6)', textAlign: 'center',
       }}>
         <div style={{ fontSize: '48px', marginBottom: '8px' }}>{isResult ? '🏁' : '🎲'}</div>
-        <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#e6edf3', marginBottom: '4px', letterSpacing: '0.04em' }}>
+        <h2 className="font-display" style={{ fontSize: '20px', fontWeight: 800, color: '#e6edf3', marginBottom: '4px', letterSpacing: '0.04em' }}>
           {isResult ? 'KẾT QUẢ THỨ TỰ CHƠI' : 'XÁC ĐỊNH THỨ TỰ CHƠI'}
         </h2>
         <p style={{ fontSize: '12px', color: '#8b949e', marginBottom: '24px' }}>

@@ -20,9 +20,9 @@ export default function GamePanel() {
       <div className="game-panel">
         <div style={{ textAlign: 'center', padding: '24px 0' }}>
           <div style={{ fontSize: '56px', marginBottom: '8px' }}>🏆</div>
-          <h2 style={{ color: '#ffd700', fontSize: '20px', fontWeight: 900 }}>{w?.name}</h2>
+          <h2 className="font-display" style={{ color: '#ffd700', fontSize: '20px', fontWeight: 800 }}>{w?.name}</h2>
           <p style={{ color: '#8b949e', fontSize: '13px' }}>Chiến Thắng!</p>
-          <p style={{ color: '#3fb950', fontSize: '18px', fontWeight: 700, marginTop: '8px' }}>
+          <p className="font-display" style={{ color: '#3fb950', fontSize: '18px', fontWeight: 700, marginTop: '8px' }}>
             ${w?.money?.toLocaleString()}
           </p>
         </div>
@@ -65,7 +65,7 @@ export default function GamePanel() {
             </div>
           </div>
           <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-            <div style={{ fontWeight: 800, fontSize: '16px', color: '#ffd700' }}>${player.money.toLocaleString()}</div>
+            <div className="font-display" style={{ fontWeight: 800, fontSize: '16px', color: '#ffd700' }}>${player.money.toLocaleString()}</div>
             <div style={{ fontSize: '10px', color: '#8b949e' }}>ô {player.position}</div>
           </div>
         </div>

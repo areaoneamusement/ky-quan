@@ -38,7 +38,7 @@ export default function ActionModal() {
                 fontSize: '11px', fontWeight: 700, marginBottom: '8px',
               }}>{group.name}</div>
             )}
-            <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#e6edf3', margin: '0 0 4px' }}>
+            <h2 className="font-display" style={{ fontSize: '18px', fontWeight: 800, color: '#e6edf3', margin: '0 0 4px' }}>
               {space.name}
             </h2>
             {space.country && (
@@ -114,7 +114,7 @@ function RentContent({ pa, players, dispatch }) {
         borderRadius: '10px', padding: '16px', marginBottom: '16px',
       }}>
         <div style={{ fontSize: '28px', marginBottom: '6px' }}>💸</div>
-        <div style={{ fontSize: '26px', fontWeight: 900, color: '#ff7b72' }}>${pa.amount}</div>
+        <div className="font-display" style={{ fontSize: '26px', fontWeight: 800, color: '#ff7b72' }}>${pa.amount}</div>
         <div style={{ fontSize: '12px', color: '#8b949e', marginTop: '6px' }}>
           Tiền thuê cho{' '}
           <span style={{ color: owner?.color || '#e6edf3', fontWeight: 700 }}>
@@ -166,7 +166,7 @@ function CardContent({ pa, dispatch }) {
       }}>
         {isChance ? 'Thám Hiểm' : 'Quỹ Di Sản'}
       </div>
-      <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#e6edf3', margin: '0 0 8px', lineHeight: 1.3 }}>
+      <h3 className="font-display" style={{ fontSize: '16px', fontWeight: 800, color: '#e6edf3', margin: '0 0 8px', lineHeight: 1.3 }}>
         {card.title}
       </h3>
       <p style={{ fontSize: '13px', color: '#8b949e', marginBottom: '20px', lineHeight: 1.5 }}>
@@ -189,7 +189,7 @@ function TaxContent({ pa, player, dispatch }) {
         borderRadius: '10px', padding: '16px', marginBottom: '16px',
       }}>
         <div style={{ fontSize: '28px', marginBottom: '6px' }}>💸</div>
-        <div style={{ fontSize: '26px', fontWeight: 900, color: '#ff7b72' }}>−${pa.amount}</div>
+        <div className="font-display" style={{ fontSize: '26px', fontWeight: 800, color: '#ff7b72' }}>−${pa.amount}</div>
         <div style={{ fontSize: '12px', color: '#8b949e', marginTop: '6px' }}>
           Số dư: ${player.money} → <span style={{ color: after < 0 ? '#ff4d4d' : '#3fb950' }}>${after}</span>
         </div>
@@ -206,7 +206,7 @@ function JailContent({ dispatch }) {
   return (
     <>
       <div style={{ fontSize: '52px', margin: '4px 0 10px' }}>🚫</div>
-      <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#ff7b72', margin: '0 0 8px' }}>
+      <h3 className="font-display" style={{ fontSize: '18px', fontWeight: 800, color: '#ff7b72', margin: '0 0 8px' }}>
         Bị giam tại Biên Giới!
       </h3>
       <p style={{ fontSize: '13px', color: '#8b949e', marginBottom: '20px', lineHeight: 1.5 }}>
@@ -230,7 +230,7 @@ function CornerContent({ space, dispatch }) {
   return (
     <>
       <div style={{ fontSize: '48px', margin: '4px 0 10px' }}>{info.icon}</div>
-      <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#e6edf3', margin: '0 0 8px' }}>
+      <h3 className="font-display" style={{ fontSize: '17px', fontWeight: 800, color: '#e6edf3', margin: '0 0 8px' }}>
         {info.title}
       </h3>
       <p style={{ fontSize: '13px', color: '#8b949e', marginBottom: '20px' }}>{info.msg}</p>
