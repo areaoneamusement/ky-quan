@@ -126,7 +126,7 @@ export default function GamePanel() {
       <MyAssets players={players} ownership={ownership} myId={isOnline ? myPlayerIndex : currentPlayerIndex} isOnline={isOnline} />
 
       {/* Log */}
-      <div className="panel-section" style={{ flex: 1, overflow: 'hidden' }}>
+      <div className="panel-section">
         <div style={{ fontSize: '11px', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
           Nhật ký
         </div>

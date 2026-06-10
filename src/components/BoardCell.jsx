@@ -95,16 +95,26 @@ function GhostToken({ player }) {
   )
 }
 
-// Small ownership dot in top-right of strip
-function OwnerDot({ color }) {
+// Vị trí chấm sở hữu — luôn nằm ở phần nền đen (đối diện dải màu nhóm) để
+// dễ nhận diện đồng nhất trên mọi cạnh bàn cờ.
+const OWNER_DOT_POS = {
+  top:    { top: '2px', right: '2px' },
+  bottom: { bottom: '2px', right: '2px' },
+  left:   { top: '2px', left: '2px' },
+  right:  { top: '2px', right: '2px' },
+}
+
+// Small ownership dot, placed in the empty (non-strip) corner of the cell
+function OwnerDot({ color, side }) {
   if (!color) return null
   return (
     <div style={{
-      position: 'absolute', top: '2px', right: '2px', zIndex: 5,
+      position: 'absolute', zIndex: 5,
       width: 'clamp(4px,1vmin,10px)', height: 'clamp(4px,1vmin,10px)',
       borderRadius: '50%', background: color,
       border: '1px solid rgba(255,255,255,0.5)',
       boxShadow: `0 0 4px ${color}`,
+      ...(OWNER_DOT_POS[side] || OWNER_DOT_POS.top),
     }} />
   )
 }
@@ -121,7 +131,7 @@ function PropertyCell({ space, side, playersHere, ownerColor, isMyPosition, ghos
   return (
     <div className="board-cell" style={{ gridRow: row, gridColumn: col, ...(highlight ? HIGHLIGHT_STYLE : {}) }} title={`${space.name} — $${space.price}`}>
       <div style={{ ...STRIP_STYLES[side], backgroundColor: group.color }} />
-      <OwnerDot color={ownerColor} />
+      <OwnerDot color={ownerColor} side={side} />
       {isMyPosition && <HereTag />}
       <div className="cell-inner" style={PADDING_STYLES[side]}>
         <div className="cell-icon"><Emoji symbol={space.icon} /></div>
@@ -141,7 +151,7 @@ function SpecialCell({ space, side, playersHere, ownerColor, isMyPosition, ghost
 
   return (
     <div className="board-cell" style={{ gridRow: row, gridColumn: col, background: bg, borderColor: border, ...(highlight ? HIGHLIGHT_STYLE : {}) }} title={space.name}>
-      <OwnerDot color={ownerColor} />
+      <OwnerDot color={ownerColor} side={side} />
       {isMyPosition && <HereTag />}
       <div className="cell-inner" style={PADDING_STYLES[side]}>
         <div className="cell-icon"><Emoji symbol={space.icon} /></div>
