@@ -11,6 +11,13 @@ function addLog(state, msg) {
   return { ...state, log: [msg, ...state.log].slice(0, 30) }
 }
 
+// Nối thêm thông tin vào dòng nhật ký mới nhất (vd: kèm tiền thuê phải trả
+// vào cùng dòng tung xúc xắc, để hiện chung trên banner thông báo).
+function appendToLastLog(state, extra) {
+  if (state.log.length === 0) return addLog(state, extra)
+  return { ...state, log: [`${state.log[0]} · ${extra}`, ...state.log.slice(1)] }
+}
+
 export function getPlayer(state, id) {
   return state.players.find(p => p.id === id)
 }
@@ -85,7 +92,10 @@ export function processLanding(state, playerId, dice) {
       if (space.type === 'property')  rent = L.calculatePropertyRent(spaceId, state.ownership)
       else if (space.type === 'airport') rent = L.calculateAirportRent(ownerId, state.ownership)
       else                            rent = L.calculateUtilityRent(ownerId, state.ownership, dice)
-      return { ...state, pendingAction: { type: 'land', landType: 'rent', spaceId, ownerId, amount: rent } }
+      const owner = getPlayer(state, ownerId)
+      let s = { ...state, pendingAction: { type: 'land', landType: 'rent', spaceId, ownerId, amount: rent } }
+      s = appendToLastLog(s, `💸 Trả $${rent} tiền thuê ${space.name} cho ${owner.emoji} ${owner.name}`)
+      return s
     }
     case 'chance': {
       const card = state.chanceDeck[state.chanceIndex % state.chanceDeck.length]
