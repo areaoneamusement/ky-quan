@@ -1,29 +1,41 @@
 import React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { BOARD_SPACES, GROUPS } from '../data/boardData'
 import { useGame } from '../context/GameContext'
 
 export default function ActionModal() {
   const { state, dispatch } = useGame()
   const { pendingAction, players, currentPlayerIndex, ownership } = state
-  if (!pendingAction || pendingAction.type !== 'land') return null
+  const isLand = pendingAction && pendingAction.type === 'land'
 
-  const player  = players[currentPlayerIndex]
-  const { landType, spaceId } = pendingAction
+  const player  = isLand ? players[currentPlayerIndex] : null
+  const { landType, spaceId } = pendingAction || {}
   const space   = spaceId !== undefined ? BOARD_SPACES[spaceId] : null
   const group   = space?.group ? GROUPS[space.group] : null
   const showHdr = space && ['property', 'airport', 'utility', 'tax'].includes(space.type)
 
   return (
-    <div style={{
+    <AnimatePresence>
+      {isLand && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.78)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       zIndex: 1000, padding: '16px',
     }}>
-      <div style={{
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 8 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+        style={{
         background: '#161b22', border: '1px solid #30363d', borderRadius: '16px',
         padding: '24px 22px', width: '100%', maxWidth: '380px',
         textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
-        animation: 'modalIn 0.22s ease',
         maxHeight: '90vh', overflowY: 'auto',
       }}>
 
@@ -55,8 +67,10 @@ export default function ActionModal() {
         {landType === 'tax'     && <TaxContent pa={pendingAction} player={player} dispatch={dispatch} />}
         {landType === 'gotojail'&& <JailContent dispatch={dispatch} />}
         {landType === 'corner'  && <CornerContent space={space} dispatch={dispatch} />}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 

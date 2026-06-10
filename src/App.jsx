@@ -9,6 +9,8 @@ import MultiplayerSetup from './components/MultiplayerSetup'
 import OrderRollScreen from './components/OrderRollScreen'
 import { loadSession } from './utils/playerId'
 import { canAutoEndTurn } from './game/reducer'
+import { WifiOff } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // ─── Top banner — shows the latest log line whenever dice are rolled ────────
 
@@ -33,12 +35,20 @@ function TopBanner() {
     }
   }, [dice, diceRolled])
 
-  if (phase !== 'playing' || !visible || !log[0]) return null
-
   return (
-    <div className="top-banner">
-      🎲 {log[0]}
-    </div>
+    <AnimatePresence>
+      {phase === 'playing' && visible && log[0] && (
+        <motion.div
+          className="top-banner"
+          initial={{ opacity: 0, y: -16, x: '-50%' }}
+          animate={{ opacity: 1, y: 0, x: '-50%' }}
+          exit={{ opacity: 0, y: -16, x: '-50%' }}
+          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+        >
+          🎲 {log[0]}
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 
@@ -48,8 +58,8 @@ function ConnectionBanner() {
   const { isOnline, connectionStatus } = useGame()
   if (!isOnline || connectionStatus === 'connected') return null
   return (
-    <div className="connection-banner">
-      📡 Mất kết nối — đang kết nối lại...
+    <div className="connection-banner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+      <WifiOff size={13} /> Mất kết nối — đang kết nối lại...
     </div>
   )
 }

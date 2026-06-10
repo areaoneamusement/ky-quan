@@ -107,7 +107,6 @@ body {
   position: fixed;
   top: 12px;
   left: 50%;
-  transform: translateX(-50%);
   z-index: 1100;
   background: rgba(22, 27, 34, 0.96);
   border: 1px solid #30363d;
@@ -121,12 +120,6 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  animation: bannerIn 0.25s ease;
-}
-
-@keyframes bannerIn {
-  from { opacity: 0; transform: translate(-50%, -16px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
 /* ── Connection status banner ────────────────── */

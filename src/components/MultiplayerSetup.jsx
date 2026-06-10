@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
+import { Copy, Check, QrCode } from 'lucide-react'
 import { socket } from '../socket'
 import { PLAYER_PRESETS } from '../game/gameLogic'
 import { getPlayerId, saveSession, loadSession, clearSession } from '../utils/playerId'
@@ -265,22 +266,25 @@ function LobbyScreen({ lobbyData, onGameStart, onBack }) {
             {code}
           </div>
           <button onClick={copyCode} style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
             background: copied ? 'rgba(63,185,80,0.15)' : 'rgba(255,255,255,0.06)',
             border: '1px solid ' + (copied ? '#3fb950' : '#30363d'),
             borderRadius: '8px', padding: '8px 12px',
             color: copied ? '#3fb950' : '#8b949e',
             fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
           }}>
-            {copied ? '✓ Đã sao chép' : '📋 Sao chép'}
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? 'Đã sao chép' : 'Sao chép'}
           </button>
           <button onClick={() => setShowQr(s => !s)} style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
             background: showQr ? 'rgba(65,105,225,0.18)' : 'rgba(255,255,255,0.06)',
             border: '1px solid ' + (showQr ? '#4169e1' : '#30363d'),
             borderRadius: '8px', padding: '8px 12px',
             color: showQr ? '#79b8ff' : '#8b949e',
             fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s',
           }}>
-            📱 QR
+            <QrCode size={14} /> QR
           </button>
         </div>
 

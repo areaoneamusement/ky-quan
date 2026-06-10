@@ -1,4 +1,5 @@
 import React from 'react'
+import { LogOut, Globe } from 'lucide-react'
 import { useGame } from '../context/GameContext'
 import { BOARD_SPACES } from '../data/boardData'
 import { isDoubles, calculateNetWorth } from '../game/gameLogic'
@@ -35,15 +36,16 @@ export default function GamePanel() {
       {/* Online room bar + logout */}
       {isOnline && (
         <div className="panel-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px' }}>
-          <div style={{ fontSize: '11px', color: '#8b949e' }}>
-            🌐 Phòng <span style={{ color: '#ffd700', fontWeight: 800, letterSpacing: '0.1em' }}>{code}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#8b949e' }}>
+            <Globe size={13} /> Phòng <span className="font-display" style={{ color: '#ffd700', fontWeight: 800, letterSpacing: '0.1em' }}>{code}</span>
           </div>
           <button onClick={logout} style={{
+            display: 'flex', alignItems: 'center', gap: '5px',
             background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.3)',
             borderRadius: '6px', padding: '4px 10px', color: '#ff7b72',
             fontSize: '11px', fontWeight: 700, cursor: 'pointer',
           }}>
-            🚪 Đăng xuất
+            <LogOut size={13} /> Đăng xuất
           </button>
         </div>
       )}
