@@ -41,15 +41,23 @@ function BoardCenter() {
   )
 }
 
+const BOARD_SIZE = 40
+const STEP_MS = 220
+
 export default function Board() {
-  const { state } = useGame()
-  const { players, ownership, phase, dice, diceRolled } = state
+  const { state, isOnline, myPlayerIndex } = useGame()
+  const { players, ownership, phase, dice, diceRolled, currentPlayerIndex } = state
 
   // Track dice rolls to trigger animation
   const [rollKey, setRollKey] = useState(null)
   const [showAnim, setShowAnim] = useState(false)
   const prevDice = useRef(dice)
   const animTimer = useRef(null)
+
+  // Step-by-step movement animation
+  const prevPositionsRef = useRef({})
+  const [moveAnim, setMoveAnim] = useState(null) // { player, path, step }
+  const moveIntervalRef = useRef(null)
 
   useEffect(() => {
     if (
@@ -60,20 +68,60 @@ export default function Board() {
       setRollKey(Date.now())
       setShowAnim(true)
       animTimer.current = setTimeout(() => setShowAnim(false), 3000)
+
+      // Animate the active player's token moving step-by-step
+      const player = players[currentPlayerIndex]
+      const oldPos = prevPositionsRef.current[player?.id]
+      const sum = dice[0] + dice[1]
+      if (player && oldPos !== undefined && oldPos !== player.position) {
+        const path = []
+        for (let i = 0; i <= sum; i++) path.push((oldPos + i) % BOARD_SIZE)
+        if (path[path.length - 1] === player.position) {
+          clearInterval(moveIntervalRef.current)
+          let step = 0
+          setMoveAnim({ player, path, step: 0 })
+          moveIntervalRef.current = setInterval(() => {
+            step += 1
+            if (step >= path.length) {
+              clearInterval(moveIntervalRef.current)
+              setMoveAnim(null)
+              return
+            }
+            setMoveAnim({ player, path, step })
+          }, STEP_MS)
+        }
+      }
     }
     prevDice.current = dice
   }, [dice, diceRolled])
+
+  // Keep track of latest positions for the next animation (after this render's effects run)
+  useEffect(() => {
+    const m = {}
+    players.forEach(p => { m[p.id] = p.position })
+    prevPositionsRef.current = m
+  }, [players])
+
+  useEffect(() => () => clearInterval(moveIntervalRef.current), [])
 
   // Build position → players map
   const playerMap = {}
   if (phase === 'playing' || phase === 'ended') {
     players.forEach(p => {
       if (!p.bankrupt) {
+        if (moveAnim && moveAnim.player.id === p.id) return // hidden while animating
         if (!playerMap[p.position]) playerMap[p.position] = []
         playerMap[p.position].push(p)
       }
     })
   }
+
+  // "Bạn đang ở đây" — vị trí của người chơi hiện tại (online: bạn; solo: người đang đi)
+  const myId = isOnline ? myPlayerIndex : currentPlayerIndex
+  const myPlayer = players.find(p => p.id === myId)
+  const myPosition = (phase === 'playing' && myPlayer && !myPlayer.bankrupt) ? myPlayer.position : null
+
+  const ghostSpaceId = moveAnim ? moveAnim.path[moveAnim.step] : null
 
   return (
     <div style={{ padding: 'clamp(4px,1vmin,16px)', display: 'flex', justifyContent: 'center' }}>
@@ -90,6 +138,9 @@ export default function Board() {
                   ? players[ownership[space.id]]?.color
                   : undefined
               }
+              isMyPosition={space.id === myPosition}
+              ghostPlayer={space.id === ghostSpaceId ? moveAnim.player : null}
+              highlight={space.id === ghostSpaceId}
             />
           ))}
           <BoardCenter />

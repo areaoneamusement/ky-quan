@@ -46,16 +46,22 @@ function declareBankrupt(state, playerId) {
 }
 
 // Khi đã tung xúc xắc xong, không còn hành động nào chờ xử lý, và không
-// được tung lại (do được đôi) — tự động chuyển sang lượt người chơi tiếp theo.
+// được tung lại (do được đôi) — lượt sẽ tự động kết thúc (sau một khoảng
+// trễ ngắn để người chơi kịp xem kết quả tung xúc xắc, xem canAutoEndTurn).
 function canReroll(state) {
   const player = state.players[state.currentPlayerIndex]
   return state.diceRolled && L.isDoubles(state.dice) && state.doublesCount > 0 && !state.pendingAction && !player.inJail
 }
 
+// Dùng bởi UI/bot để biết khi nào nên tự dispatch END_TURN (có độ trễ hiển thị).
+export function canAutoEndTurn(state) {
+  if (state.phase !== 'playing' || state.pendingAction || !state.diceRolled) return false
+  return !canReroll(state)
+}
+
+// Giữ nguyên state — việc kết thúc lượt được UI/bot dispatch sau một khoảng trễ ngắn.
 function maybeAutoEndTurn(state) {
-  if (state.phase !== 'playing' || state.pendingAction || !state.diceRolled) return state
-  if (canReroll(state)) return state
-  return reducer(state, { type: 'END_TURN' })
+  return state
 }
 
 export function processLanding(state, playerId, dice) {

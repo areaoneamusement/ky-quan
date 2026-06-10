@@ -8,6 +8,7 @@ import ActionModal from './components/ActionModal'
 import MultiplayerSetup from './components/MultiplayerSetup'
 import OrderRollScreen from './components/OrderRollScreen'
 import { loadSession } from './utils/playerId'
+import { canAutoEndTurn } from './game/reducer'
 
 // ─── Top banner — shows the latest log line whenever dice are rolled ────────
 
@@ -56,7 +57,7 @@ function ConnectionBanner() {
 // ─── Game view (board + panel + modal) ───────────────────────────────────────
 
 function GameApp() {
-  const { state, isOnline, myPlayerIndex } = useGame()
+  const { state, dispatch, isOnline, myPlayerIndex } = useGame()
   const { phase, dice, diceRolled, currentPlayerIndex } = state
 
   // Delay ActionModal until after dice animation (3s) so they don't overlap
@@ -78,6 +79,15 @@ function GameApp() {
     }
   }, [dice, diceRolled])
 
+  // Tự động kết thúc lượt sau khi xử lý xong, nhưng để chậm lại một chút
+  // để người chơi kịp xem kết quả tung xúc xắc (đặc biệt khi đang bị giam)
+  const isMyTurn = !isOnline || myPlayerIndex === currentPlayerIndex
+  useEffect(() => {
+    if (!isMyTurn || !canAutoEndTurn(state)) return
+    const t = setTimeout(() => dispatch({ type: 'END_TURN' }), 1800)
+    return () => clearTimeout(t)
+  }, [state, isMyTurn, dispatch])
+
   // In solo mode: setup screen before game starts
   if (phase === 'setup') return <SetupScreen />
 
@@ -90,9 +100,6 @@ function GameApp() {
       </>
     )
   }
-
-  // In online mode: modal only shows for the active player
-  const isMyTurn = !isOnline || myPlayerIndex === currentPlayerIndex
 
   return (
     <div className="game-layout">
